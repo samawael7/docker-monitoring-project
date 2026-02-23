@@ -1,0 +1,126 @@
+collector_name: mssql_standard
+min_interval: 0s
+
+metrics:
+  - metric_name: mssql_up
+    type: gauge
+    help: 'MSSQL server is up'
+    values: [up]
+    query: |
+      SELECT 1 AS up
+
+  - metric_name: mssql_connections
+    type: gauge
+    help: 'Number of active user connections'
+    values: [count]
+    query: |
+      SELECT COUNT(*) AS count
+      FROM sys.dm_exec_sessions
+      WHERE is_user_process = 1
+
+  - metric_name: mssql_database_size_bytes
+    type: gauge
+    help: 'Size of each database in bytes'
+    key_labels: [db]
+    values: [size_bytes]
+    query: |
+      SELECT
+        name AS db,
+        SUM(size) * 8 * 1024 AS size_bytes
+      FROM sys.master_files
+      GROUP BY name
+
+  - metric_name: mssql_deadlocks_total
+    type: gauge
+    help: 'Total number of deadlocks per second'
+    values: [deadlocks]
+    query: |
+      SELECT cntr_value AS deadlocks
+      FROM sys.dm_os_performance_counters
+      WHERE counter_name = 'Number of Deadlocks/sec'
+        AND instance_name = '_Total'
+
+  - metric_name: mssql_batch_requests_total
+    type: gauge
+    help: 'Number of batch requests per second'
+    values: [batch_requests]
+    query: |
+      SELECT cntr_value AS batch_requests
+      FROM sys.dm_os_performance_counters
+      WHERE counter_name = 'Batch Requests/sec'
+
+  - metric_name: mssql_page_life_expectancy
+    type: gauge
+    help: 'Page life expectancy in seconds (higher is better, should be above 300)'
+    values: [ple]
+    query: |
+      SELECT cntr_value AS ple
+      FROM sys.dm_os_performance_counters
+      WHERE counter_name = 'Page life expectancy'
+        AND object_name LIKE '%Buffer Manager%'
+
+  - metric_name: mssql_cpu_usage_percent
+    type: gauge
+    help: 'SQL Server CPU usage percentage'
+    values: [cpu_percent]
+    query: |
+      SELECT TOP 1
+        record.value('(./Record/SchedulerMonitorEvent/SystemHealth/ProcessUtilization)[1]', 'int') AS cpu_percent
+      FROM (
+        SELECT CONVERT(XML, record) AS record
+        FROM sys.dm_os_ring_buffers
+        WHERE ring_buffer_type = N'RING_BUFFER_SCHEDULER_MONITOR'
+          AND record LIKE '%<SystemHealth>%'
+      ) AS ring
+      ORDER BY record.value('(./Record/@id)[1]', 'bigint') DESC
+
+  - metric_name: mssql_memory_usage_bytes
+    type: gauge
+    help: 'SQL Server total memory used in bytes'
+    values: [memory_bytes]
+    query: |
+      SELECT
+        physical_memory_in_use_kb * 1024 AS memory_bytes
+      FROM sys.dm_os_process_memory
+
+  - metric_name: mssql_lock_waits_per_second
+    type: gauge
+    help: 'Number of lock waits per second'
+    values: [lock_waits]
+    query: |
+      SELECT cntr_value AS lock_waits
+      FROM sys.dm_os_performance_counters
+      WHERE counter_name = 'Lock Waits/sec'
+        AND instance_name = '_Total'
+
+  - metric_name: mssql_user_errors_total
+    type: gauge
+    help: 'Number of user errors per second'
+    values: [user_errors]
+    query: |
+      SELECT cntr_value AS user_errors
+      FROM sys.dm_os_performance_counters
+      WHERE counter_name = 'Errors/sec'
+        AND instance_name = 'User Errors'
+
+  - metric_name: mssql_transactions_per_second
+    type: gauge
+    help: 'Number of transactions per second'
+    values: [transactions]
+    query: |
+      SELECT cntr_value AS transactions
+      FROM sys.dm_os_performance_counters
+      WHERE counter_name = 'Transactions/sec'
+        AND instance_name = '_Total'
+
+  - metric_name: mssql_log_growth_events
+    type: gauge
+    help: 'Number of log growth events per database'
+    key_labels: [db]
+    values: [growth_events]
+    query: |
+      SELECT
+        DB_NAME(database_id) AS db,
+        cntr_value AS growth_events
+      FROM sys.dm_os_performance_counters
+      WHERE counter_name = 'Log Growths'

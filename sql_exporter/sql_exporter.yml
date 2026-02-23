@@ -1,0 +1,11 @@
+global:
+  scrape_timeout: 10s
+  scrape_timeout_offset: 500ms
+  min_interval: 0s
+
+target:
+  data_source_name: "sqlserver://sa:YourStrong%40Passw0rd@sqlserver:1433?database=master"
+  collectors: [mssql_standard]
+
+collector_files:
+  - "/collectors/*.collector.yml"
