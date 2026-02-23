@@ -1,18 +1,36 @@
-🐳 Docker Monitoring Stack
-A production-ready monitoring stack using Docker Compose, featuring Prometheus, Grafana, and Microsoft SQL Server with custom metrics collection via SQL Exporter.
+🚀 Monitoring Project
 
-📊 Dashboard:
+Monitor SQL Server with Prometheus, Grafana, and SQL Exporter.
 
-Grafana dashboard showing real-time SQL Server metrics including CPU usage, memory, connections, and batch requests.
+🧩 Stack
 
-🏗️ Architecture
-┌─────────────┐     scrapes     ┌──────────────┐     queries     ┌─────────────┐
-│  Prometheus │ ──────────────► │ SQL Exporter │ ──────────────► │ SQL Server  │
-└─────────────┘                 └──────────────┘                 └─────────────┘
-       │
-       │ data source
-       ▼
-┌─────────────┐
-│   Grafana   │
-└─────────────┘
-ServiceImagePortSQL Server 2022mcr.microsoft.com/mssql/server:2022-latest1433SQL Exporterburningalchemist/sql_exporter:latest9399Prometheusprom/prometheus:latest9090Grafanagrafana/grafana:latest3000
+SQL Server – Your database
+
+SQL Exporter – SQL metrics to Prometheus
+
+Prometheus – Metrics collection & storage
+
+Grafana – Dashboards & visualization
+
+⚡ Quick Start
+git clone <your-repo-url>
+cd monitoring-project
+docker compose up -d
+
+Access services:
+
+Grafana: http://localhost:3000
+ (admin / admin123)
+
+Prometheus: http://localhost:9090
+
+Stop everything:
+
+docker compose down
+📌 Notes
+
+SQL Exporter config → sql_exporter/sql_exporter.yml
+
+Prometheus config → prometheus/prometheus.yml
+
+Ensure Docker is running & ports 1433, 9399, 9090, 3000 are free
